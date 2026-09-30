@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select';
 import { SettingsPanelHead } from './settings-panel-head';
 import { AiKnowledgeCard } from './ai-knowledge';
-import { AI_PROVIDER_DEFAULT_MODEL } from '@/lib/ai/defaults';
+import { AI_PROVIDER_DEFAULT_MODEL, D_COMPANY_DEFAULT_SYSTEM_PROMPT } from '@/lib/ai/defaults';
 import type { AiProvider } from '@/lib/ai/types';
 import type { AccountMember } from '@/types';
 import { fetchAccountMembers, memberLabel } from '@/lib/account/members';
@@ -41,11 +41,13 @@ const HANDOFF_QUEUE = '__queue__';
 const PROVIDER_LABEL: Record<AiProvider, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic (Claude)',
+  gemini: 'Google Gemini (Free)',
 };
 
 const KEY_PLACEHOLDER: Record<AiProvider, string> = {
   openai: 'sk-...',
   anthropic: 'sk-ant-...',
+  gemini: 'AIza... (Google AI Studio key)',
 };
 
 export function AiConfig() {
@@ -68,7 +70,7 @@ export function AiConfig() {
   const [embeddingsKey, setEmbeddingsKey] = useState('');
   const [embeddingsKeyEdited, setEmbeddingsKeyEdited] = useState(false);
   const [hasStoredEmbeddingsKey, setHasStoredEmbeddingsKey] = useState(false);
-  const [systemPrompt, setSystemPrompt] = useState('');
+  const [systemPrompt, setSystemPrompt] = useState(D_COMPANY_DEFAULT_SYSTEM_PROMPT);
   const [isActive, setIsActive] = useState(false);
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [maxPerConversation, setMaxPerConversation] = useState(3);
@@ -95,7 +97,7 @@ export function AiConfig() {
         setConfigured(true);
         setProvider(data.provider);
         setModel(data.model);
-        setSystemPrompt(data.system_prompt ?? '');
+        setSystemPrompt(data.system_prompt ?? D_COMPANY_DEFAULT_SYSTEM_PROMPT);
         setIsActive(data.is_active);
         setAutoReplyEnabled(data.auto_reply_enabled);
         setMaxPerConversation(data.auto_reply_max_per_conversation ?? 3);
@@ -281,6 +283,9 @@ export function AiConfig() {
                     <SelectItem value="anthropic">
                       {PROVIDER_LABEL.anthropic}
                     </SelectItem>
+                    <SelectItem value="gemini">
+                      {PROVIDER_LABEL.gemini}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -390,7 +395,18 @@ export function AiConfig() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="ai-prompt">{t('businessContext')}</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="ai-prompt">{t('businessContext')}</Label>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => setSystemPrompt(D_COMPANY_DEFAULT_SYSTEM_PROMPT)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    ↺ D Company default prompt
+                  </button>
+                )}
+              </div>
               <Textarea
                 id="ai-prompt"
                 value={systemPrompt}
